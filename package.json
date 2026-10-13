@@ -1,7 +1,7 @@
 {
-  "name": "soundbase-plugin-template",
-  "version": "0.1.12",
-  "description": "Starting point for a SoundBase plugin: a synthetic spectrum analyzer served by the plugin shell.",
+  "name": "soundbase-plugin-shure-anx4",
+  "version": "0.1.0",
+  "description": "SoundBase plugin for the Shure ANX4 wireless receiver: channel monitoring and control over Shure command strings.",
   "license": "BUSL-1.1",
   "type": "module",
   "main": "main.js",
@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "node main.js",
+    "fake": "node driver/fake-anx4.js",
     "test": "node --test __tests__/*.test.js examples/*/__tests__/*.test.js",
     "doctor": "node scripts/doctor.mjs",
     "manifest": "node scripts/validate-manifest.mjs",

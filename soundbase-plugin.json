@@ -1,16 +1,15 @@
 {
   "manifestVersion": 1,
-  "id": "template",
-  "name": "SoundBase Plugin Template",
-  "version": "0.1.12",
+  "id": "shure-anx4",
+  "name": "Shure ANX4",
+  "version": "0.1.0",
   "license": "BUSL-1.1",
   "platforms": ["darwin-arm64", "darwin-x64", "win32-x64"],
-  "repository": "https://github.com/your-org/soundbase-plugin-template",
-  "maintainers": [{ "name": "Your Name", "email": "you@example.com" }],
+  "repository": "https://github.com/soundbase-lab/shure-anx4",
+  "maintainers": [{ "name": "Matt Dale", "email": "matt.dale@soundbase.app" }],
   "contract": {
     "core": "1.4",
     "modules": {
-      "SpectrumAnalyzer": "1.2",
       "ChannelMonitoring": "1.1",
       "PropertyControl": "1.0"
     }
@@ -20,91 +19,130 @@
   "template": { "name": "soundbase-plugin-template", "version": "1.0.15" },
   "products": [
     {
-      "deviceTypeId": "plugin:template/synthetic",
-      "manufacturer": {
-        "id": "soundbase",
-        "name": "SoundBase",
-        "logo": {
-          "light": "logos/soundbase-light.svg",
-          "dark": "logos/soundbase-dark.svg"
-        }
-      },
+      "deviceTypeId": "plugin:shure-anx4/anx4",
+      "manufacturer": { "id": "shure", "name": "Shure" },
       "model": {
-        "id": "synthetic",
-        "name": "Synthetic",
-        "displayName": "Synthetic Analyzer"
+        "id": "anx4",
+        "name": "ANX4",
+        "displayName": "Shure ANX4"
       },
-      "family": { "id": "template", "name": "Template" },
-      "capabilities": { "spectrumAnalyzer": true },
-      "traits": { "isSpectrumAnalyzer": true }
-    },
-    {
-      "deviceTypeId": "plugin:template/synthetic-iem",
-      "manufacturer": {
-        "id": "soundbase",
-        "name": "SoundBase",
-        "logo": {
-          "light": "logos/soundbase-light.svg",
-          "dark": "logos/soundbase-dark.svg"
-        }
-      },
-      "model": {
-        "id": "synthetic-iem",
-        "name": "Synthetic IEM",
-        "displayName": "Synthetic Stereo IEM"
-      },
-      "family": { "id": "template", "name": "Template" },
+      "family": { "id": "shure-anx4", "name": "Shure ANX4" },
       "capabilities": {
-        "meters": true,
-        "frequency": true,
         "name": true,
+        "frequency": true,
+        "meters": true,
         "mute": true,
-        "receivers": true
+        "battery": true,
+        "receivers": "conditional"
       },
       "traits": {
-        "isTransmitter": true,
-        "isIem": true,
+        "isReceiver": true,
         "isRackDevice": true,
-        "channelCount": 2
+        "channelCount": 24,
+        "slotCount": 8
       },
       "channelName": {
         "maxLength": 8,
-        "uppercase": true,
         "allowsSpaces": true,
-        "allowedChars": "^[A-Z0-9 _-]*$"
+        "allowedChars": "^[A-Za-z0-9!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`~ ]*$"
       },
       "layout": {
         "channel": [
           {
-            "type": "group",
-            "direction": "row",
-            "children": [
-              {
-                "type": "meter",
-                "bind": "meters.af",
-                "metric": "AUDIO_LEVEL",
-                "label": "L"
-              },
-              {
-                "type": "meter",
-                "bind": "meters.afR",
-                "metric": "AUDIO_LEVEL_RIGHT",
-                "label": "R"
-              }
-            ]
+            "type": "meter",
+            "bind": "meters.af",
+            "metric": "AUDIO_LEVEL",
+            "label": "Audio"
+          },
+          {
+            "type": "meter",
+            "bind": "meters.rf1",
+            "metric": "RF_LEVEL",
+            "label": "A"
+          },
+          {
+            "type": "meter",
+            "bind": "meters.rf2",
+            "metric": "RF_LEVEL",
+            "label": "B"
+          },
+          {
+            "type": "meter",
+            "bind": "meters.rf3",
+            "metric": "RF_LEVEL",
+            "label": "C",
+            "labelFrom": {
+              "bind": "x.shure-anx4.channel.rfLayout",
+              "map": { "AB_FDC": "A2" }
+            },
+            "visibleWhen": {
+              "bind": "x.shure-anx4.channel.rfLayout",
+              "in": ["QUAD", "AB_FDC", "QUAD_FDC"]
+            }
+          },
+          {
+            "type": "meter",
+            "bind": "meters.rf4",
+            "metric": "RF_LEVEL",
+            "label": "D",
+            "labelFrom": {
+              "bind": "x.shure-anx4.channel.rfLayout",
+              "map": { "AB_FDC": "B2" }
+            },
+            "visibleWhen": {
+              "bind": "x.shure-anx4.channel.rfLayout",
+              "in": ["QUAD", "AB_FDC", "QUAD_FDC"]
+            }
+          },
+          {
+            "type": "meter",
+            "bind": "meters.rf5",
+            "metric": "RF_LEVEL",
+            "label": "A2",
+            "visibleWhen": {
+              "bind": "x.shure-anx4.channel.rfLayout",
+              "equals": "QUAD_FDC"
+            }
+          },
+          {
+            "type": "meter",
+            "bind": "meters.rf6",
+            "metric": "RF_LEVEL",
+            "label": "B2",
+            "visibleWhen": {
+              "bind": "x.shure-anx4.channel.rfLayout",
+              "equals": "QUAD_FDC"
+            }
+          },
+          {
+            "type": "meter",
+            "bind": "meters.lqi",
+            "metric": "QUALITY",
+            "label": "Quality"
           },
           {
             "type": "value",
-            "bind": "frequency",
-            "format": "frequency",
-            "unit": "MHz"
+            "bind": "x.shure-anx4.tx.model",
+            "label": "Transmitter"
           },
           {
             "type": "value",
-            "bind": "txPower",
+            "bind": "x.shure-anx4.channel.gain",
+            "label": "Gain",
             "format": "integer",
-            "unit": "mW",
-            "label": "TX"
+            "unit": "dB"
+          },
+          {
+            "type": "indicator",
+            "bind": "x.shure-anx4.channel.interference",
+            "label": "Interference",
+            "tone": "destructive"
+          },
+          {
+            "type": "indicator",
+            "bind": "x.shure-anx4.tx.muted",
+            "label": "TX mute",
+            "tone": "warning"
           },
           {
             "type": "indicator",
@@ -112,23 +150,429 @@
             "label": "Mute",
             "tone": "warning"
           },
+          { "type": "battery", "bind": "battery" },
           {
             "type": "indicator",
-            "bind": "rfState",
-            "label": "RF",
-            "tone": "success"
+            "bind": "x.shure-anx4.channel.encryptionError",
+            "label": "Encryption mismatch",
+            "tone": "destructive",
+            "region": "detail"
           },
-          { "type": "control", "propertyId": "txPower" }
+          {
+            "type": "indicator",
+            "bind": "x.shure-anx4.channel.unregisteredTx",
+            "label": "Unregistered TX",
+            "tone": "warning",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.rfBand",
+            "label": "Band",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.groupChannel",
+            "label": "Group, channel",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.antennaConfig",
+            "label": "Antennas",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.fdMode",
+            "label": "Frequency diversity",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.frequency2",
+            "label": "Frequency 2",
+            "format": "frequency",
+            "unit": "MHz",
+            "region": "detail",
+            "visibleWhen": {
+              "bind": "x.shure-anx4.channel.fdMode",
+              "equals": "FD-C"
+            }
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.groupChannel2",
+            "label": "Group, channel 2",
+            "region": "detail",
+            "visibleWhen": {
+              "bind": "x.shure-anx4.channel.fdMode",
+              "equals": "FD-C"
+            }
+          },
+          {
+            "type": "indicator",
+            "bind": "x.shure-anx4.channel.interference2",
+            "label": "Interference 2",
+            "tone": "destructive",
+            "region": "detail",
+            "visibleWhen": {
+              "bind": "x.shure-anx4.channel.fdMode",
+              "equals": "FD-C"
+            }
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.encryptionMode",
+            "label": "Encryption",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.channel.danteChannelName",
+            "label": "Dante channel",
+            "region": "detail"
+          },
+          {
+            "type": "indicator",
+            "bind": "x.shure-anx4.channel.identify",
+            "label": "Identify",
+            "tone": "info",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.deviceId",
+            "label": "TX name",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.powerLevel",
+            "label": "TX power",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.offset",
+            "label": "TX offset",
+            "format": "integer",
+            "unit": "dB",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.inputPad",
+            "label": "TX input pad",
+            "format": "integer",
+            "unit": "dB",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.muteMode",
+            "label": "TX mute mode",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.muteButton",
+            "label": "TX mute button",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.talkSwitch",
+            "label": "Talk switch",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.lock",
+            "label": "TX lock",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.polarity",
+            "label": "TX polarity",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.highPassFilter",
+            "label": "TX high-pass filter",
+            "format": "integer",
+            "unit": "Hz",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.phantomPower",
+            "label": "TX phantom power",
+            "format": "integer",
+            "unit": "V",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.powerSource",
+            "label": "TX power source",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.batteryType",
+            "label": "Battery type",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.batteryBars",
+            "label": "Battery bars",
+            "format": "integer",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.batteryMinutes",
+            "label": "Battery runtime",
+            "format": "integer",
+            "unit": "min",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.batteryHealth",
+            "label": "Battery health",
+            "format": "percent",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.batteryCycles",
+            "label": "Battery cycles",
+            "format": "integer",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.batteryTempC",
+            "label": "Battery temperature",
+            "format": "integer",
+            "unit": "°C",
+            "region": "detail"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.tx.firmware",
+            "label": "TX firmware",
+            "region": "detail"
+          },
+          { "type": "control", "propertyId": "gain", "label": "Gain" },
+          {
+            "type": "control",
+            "propertyId": "groupChannel",
+            "label": "Group, channel"
+          },
+          { "type": "control", "propertyId": "identify", "label": "Identify" }
         ],
         "device": [
-          { "type": "text", "text": "Synthetic stereo IEM transmitter" }
+          { "type": "value", "bind": "deviceName", "label": "Device ID" },
+          {
+            "type": "indicator",
+            "bind": "connection.connected",
+            "label": "Connected",
+            "tone": "success"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.device.model",
+            "label": "Model"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.device.firmware",
+            "label": "Firmware"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.device.transmissionMode",
+            "label": "Transmission mode"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.device.licensedChannels",
+            "label": "Licensed channels",
+            "format": "integer"
+          },
+          {
+            "type": "value",
+            "bind": "x.shure-anx4.device.danteDeviceName",
+            "label": "Dante device name"
+          },
+          {
+            "type": "group",
+            "label": "Shure Control network",
+            "direction": "row",
+            "children": [
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.control.ip",
+                "label": "IP address"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.control.mode",
+                "label": "Mode"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.control.subnet",
+                "label": "Subnet mask"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.control.gateway",
+                "label": "Gateway"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.control.mac",
+                "label": "MAC address"
+              }
+            ]
+          },
+          {
+            "type": "group",
+            "label": "Dante primary",
+            "direction": "row",
+            "visibleWhen": { "bind": "x.shure-anx4.network.dantePrimary" },
+            "children": [
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.dantePrimary.ip",
+                "label": "IP address"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.dantePrimary.mode",
+                "label": "Mode"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.dantePrimary.mac",
+                "label": "MAC address"
+              }
+            ]
+          },
+          {
+            "type": "group",
+            "label": "Dante secondary",
+            "direction": "row",
+            "visibleWhen": { "bind": "x.shure-anx4.network.danteSecondary" },
+            "children": [
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.danteSecondary.ip",
+                "label": "IP address"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.danteSecondary.mode",
+                "label": "Mode"
+              },
+              {
+                "type": "value",
+                "bind": "x.shure-anx4.network.danteSecondary.mac",
+                "label": "MAC address"
+              }
+            ]
+          },
+          {
+            "type": "indicator",
+            "bind": "x.shure-anx4.device.identify",
+            "label": "Identify",
+            "tone": "info"
+          },
+          {
+            "type": "control",
+            "propertyId": "deviceName",
+            "label": "Device ID"
+          },
+          {
+            "type": "control",
+            "propertyId": "deviceIdentify",
+            "label": "Identify"
+          }
         ],
         "entities": {
           "receiver": [
             { "type": "value", "bind": "name" },
+            { "type": "value", "bind": "model", "label": "Model" },
+            { "type": "value", "bind": "status", "label": "Slot status" },
             { "type": "battery", "bind": "battery" },
-            { "type": "meter", "bind": "meters.rf1", "metric": "RF_LEVEL" },
-            { "type": "meter", "bind": "meters.lqi", "metric": "QUALITY" }
+            {
+              "type": "meter",
+              "bind": "meters.lqi",
+              "metric": "QUALITY",
+              "label": "ShowLink"
+            },
+            {
+              "type": "indicator",
+              "bind": "rfMuted",
+              "label": "RF mute",
+              "tone": "warning"
+            },
+            {
+              "type": "value",
+              "bind": "rfPower",
+              "label": "RF power",
+              "format": "integer",
+              "unit": "mW"
+            },
+            {
+              "type": "value",
+              "bind": "offset",
+              "label": "Offset",
+              "format": "integer",
+              "unit": "dB"
+            },
+            {
+              "type": "group",
+              "label": "Transmitter",
+              "direction": "row",
+              "visibleWhen": { "bind": "active" },
+              "children": [
+                { "type": "control", "propertyId": "txName", "label": "Name" },
+                {
+                  "type": "control",
+                  "propertyId": "txOffset",
+                  "label": "Offset"
+                },
+                {
+                  "type": "control",
+                  "propertyId": "txInputPad",
+                  "label": "Input pad"
+                },
+                {
+                  "type": "control",
+                  "propertyId": "txPolarity",
+                  "label": "Polarity"
+                },
+                {
+                  "type": "control",
+                  "propertyId": "txRfMute",
+                  "label": "RF mute"
+                },
+                {
+                  "type": "control",
+                  "propertyId": "txPowerMode",
+                  "label": "RF power"
+                }
+              ]
+            }
           ]
         }
       }
@@ -136,10 +580,39 @@
   ],
   "pluginConfigFields": [
     {
-      "id": "sweepIntervalMs",
+      "id": "addresses",
+      "type": "textinput",
+      "label": "ANX4 addresses",
+      "default": "",
+      "help": "IP addresses to look for ANX4 receivers at, separated by commas, e.g. `192.168.1.50, 192.168.1.51`. Each ANX4 needs command strings turned on: **Device Configuration > Network Services**."
+    },
+    {
+      "id": "meterIntervalMs",
       "type": "number",
-      "label": "Simulated sweep interval (ms)",
-      "default": 50
+      "label": "Meter interval",
+      "unit": "ms",
+      "default": 100,
+      "min": 100,
+      "max": 65535,
+      "step": 50,
+      "help": "How often each channel reports its audio and RF levels. 100 ms is the fastest the ANX4 offers."
+    }
+  ],
+  "deviceConfigFields": [
+    {
+      "id": "host",
+      "type": "textinput",
+      "label": "IP address",
+      "required": true,
+      "manualOnly": true,
+      "help": "The ANX4's Shure Control address. Command strings must be turned on in the receiver: **Device Configuration > Network Services**."
+    },
+    {
+      "id": "port",
+      "type": "number",
+      "label": "Port",
+      "default": 2202,
+      "manualOnly": true
     }
   ],
   "stateKeys": [
@@ -147,9 +620,14 @@
     "frequency",
     "channelName",
     "mute",
-    "txPower",
-    "rfState",
+    "battery",
+    "deviceName",
+    "connection",
+    "channelCount",
     "receivers",
-    { "key": "x.template.packLink", "scope": "channel", "op": "merge" }
+    { "key": "x.shure-anx4.channel", "scope": "channel", "op": "merge" },
+    { "key": "x.shure-anx4.tx", "scope": "channel", "op": "merge" },
+    { "key": "x.shure-anx4.device", "scope": "device", "op": "replace" },
+    { "key": "x.shure-anx4.network", "scope": "device", "op": "replace" }
   ]
 }
