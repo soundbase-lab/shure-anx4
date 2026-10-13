@@ -623,6 +623,7 @@
     "battery",
     "deviceName",
     "connection",
+    "channelCount",
     "receivers",
     { "key": "x.shure-anx4.channel", "scope": "channel", "op": "merge" },
     { "key": "x.shure-anx4.tx", "scope": "channel", "op": "merge" },

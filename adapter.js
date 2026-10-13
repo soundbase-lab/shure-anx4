@@ -420,13 +420,20 @@ class Anx4Adapter {
   }
 
   #receive(message) {
+    // a late report for a channel the unit no longer has must not bring it back
+    if (message.channel !== undefined && !this.#hasChannel(message.channel))
+      return;
     switch (message.kind) {
-      case 'device':
-        if (same(this.unit[message.field], message.value)) return;
+      case 'device': {
+        const before = this.unit[message.field];
+        if (same(before, message.value)) return;
         this.unit[message.field] = message.value;
         this.pending.unit = true;
         if (message.field === 'firmware') this.pending.warnings = true;
+        if (message.field === 'availableChannels' && this.reporting)
+          this.#channelsChanged(before ?? [], message.value);
         break;
+      }
 
       case 'network':
         this.network[message.value.interface] = message.value;
@@ -888,6 +895,40 @@ class Anx4Adapter {
   // -------------------------------------------------------------------------
   // PropertyControl
   // -------------------------------------------------------------------------
+
+  #hasChannel(n) {
+    const available = this.unit.availableChannels ?? [];
+    return !available.length || available.includes(n);
+  }
+
+  /**
+   * The set of channels changed while connected: a licence was installed, or
+   * Quadversity or FD-C eclipsed a channel. `open()` only reports the count
+   * once, so say so again, blank what went away, and bring what arrived up
+   * to the same state as the rest — its properties, and its metering.
+   */
+  #channelsChanged(before, after) {
+    for (const n of before.filter((b) => !after.includes(b))) {
+      for (const id of this.slots.keys()) {
+        if (this.slots.get(id).channel !== n) continue;
+        this.slots.delete(id);
+        this.pending.slots.add(id);
+      }
+      // an empty channel, reported once, is what clears its card
+      this.channels.set(n, { antennas: [] });
+      for (const key of ['channelName', 'mute', KEY.channel, KEY.tx, 'battery'])
+        this.#mark(n, key);
+    }
+    this.pending.warnings = true;
+    this.#flush();
+    for (const n of [...this.channels.keys()])
+      if (!after.includes(n)) this.channels.delete(n);
+
+    const count = this.#channelCount();
+    if (count !== undefined) this.onState?.('channelCount', count);
+    this.client?.send(command('GET', 0, 'ALL'));
+    this.client?.send(command('SET', 0, 'METER_RATE', this.meterIntervalMs));
+  }
 
   #channelNumbers() {
     const available = this.unit.availableChannels ?? [];

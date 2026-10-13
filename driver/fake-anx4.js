@@ -544,7 +544,7 @@ export async function startFakeAnx4({
         if (rate > 0) {
           const timer = setInterval(() => {
             phase += 0.05;
-            connection.write(sampleLine(n));
+            if (channels[n]) connection.write(sampleLine(n));
           }, rate);
           timer.unref?.();
           meters.set(n, timer);
@@ -598,6 +598,18 @@ export async function startFakeAnx4({
     changeSlot(n, slot, property, value) {
       channels[n].slots[slot - 1][property] = value;
       broadcast(slotLine(n, slot, property));
+    },
+    /**
+     * Change which channels exist, as a licence or a Quadversity pairing
+     * does, and REPort the new list.
+     */
+    setAvailableChannels(numbers) {
+      for (const n of Object.keys(channels).map(Number))
+        if (!numbers.includes(n)) delete channels[n];
+      for (const n of numbers) channels[n] ??= buildChannel(n);
+      device.AVAILABLE_CHANNELS = numbers.join(',');
+      device.NUMBER_CHANNELS_LICENSED = numbers.length;
+      broadcast(deviceLine('AVAILABLE_CHANNELS'));
     },
     /** drop every connection without closing the listener — a transport death */
     dropConnections() {

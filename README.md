@@ -110,7 +110,10 @@ receiver did not accept.
 
 A core state key is used wherever the contract documents the value's shape:
 `channelName`, `frequency`, `mute`, `meters`, `battery`, `deviceName`,
-`connection`, `receivers`. Everything else travels under four extension keys
+`connection`, `receivers`. One exception: `channelCount` is sent as a plain
+number when the receiver's set of channels changes while connected (a licence,
+or a channel eclipsed by Quadversity or FD-C); the contract lists the key but
+not its shape. Everything else travels under four extension keys
 declared in the manifest and bound by its layout:
 
 | Key | Scope | Carries |

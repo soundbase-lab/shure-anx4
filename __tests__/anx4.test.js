@@ -564,6 +564,55 @@ test('a device added by hand takes its address from its configuration', async (t
   );
 });
 
+test('channels that appear or disappear while connected are followed', async (t) => {
+  const stream = await openEvents();
+  t.after(() => stream.close());
+  const count = () => stream.patches('channelCount').at(-1)?.value;
+
+  // a licence adds two channels
+  anx4.setAvailableChannels([1, 2, 3, 4, 5, 6]);
+  await until(() => count() === 6, 'the new channel count');
+  assert.equal(stream.patches('channelCount').at(-1).scope, 'device');
+  await until(
+    () => stream.channel('channelName', 6) === 'CH 6',
+    "the new channel's state",
+  );
+  await until(() => stream.channel('meters', 6), "the new channel's meters");
+  const accepted = await send({
+    propertyId: 'gain',
+    channelIndex: 6,
+    value: 0,
+  });
+  assert.equal(accepted.status, 202, 'and it takes commands');
+
+  // channels 2 and 4 to 6 go away; 3 is still the highest
+  anx4.setAvailableChannels([1, 3]);
+  await until(() => count() === 3, 'the reduced channel count');
+  // the channel that went away is blanked, along with its registered transmitter
+  await until(
+    () => stream.channel(TX, 2)?.present === false,
+    'the removed channel to be cleared',
+  );
+  assert.equal(stream.channel('channelName', 2), '');
+  assert.ok(
+    stream
+      .patches('receivers')
+      .some((p) => p.value.removed.includes('slot:2:1')),
+  );
+  const refused = await send({ propertyId: 'gain', channelIndex: 2, value: 0 });
+  assert.equal(refused.status, 400);
+  assert.equal(refused.body.error, 'unknown_channel');
+  const before = stream.patches('meters').length;
+  await delay(250);
+  assert.ok(
+    stream
+      .patches('meters')
+      .slice(before)
+      .every((p) => !('2' in p.value.channels)),
+    'no meters for a channel that no longer exists',
+  );
+});
+
 test('something that is not an ANX4 fails to open with a message that says what to check', async (t) => {
   const mute = await startFakeAnx4({ silent: true });
   const id = 'manual:silent';
