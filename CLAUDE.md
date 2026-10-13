@@ -19,16 +19,32 @@ software is willing to use. `docs/soundbase.md` is the full orientation.
 
 The author writes device logic. The author never writes UI, IPC, or HTTP.
 
+**This plugin is `shure-anx4`**: one product, the Shure ANX4 wireless
+receiver, over Shure's command strings on TCP 2202. It is a
+`ChannelMonitoring` + `PropertyControl` device only — the protocol has no
+scan command, so `adapter.js` exports `discoverDevices` and
+`createMonitoringAdapter` and no spectrum-analyzer factory.
+`driver/protocol.md` records how the protocol document was read; read it
+before changing anything in `driver/`. It was built against
+`driver/fake-anx4.js`, not against hardware.
+
 ```
-soundbase-plugin.json   identity, products, config fields
+soundbase-plugin.json   identity, the ANX4 product and its layout, config fields
 main.js                 shell bootstrap — never edit
-adapter.js              device logic — this is the file that changes
-driver/                 optional: protocol-specific code adapter.js uses
-__tests__/              contract tests, driven through the real shell
-examples/network-analyzer/   a second complete plugin, over TCP, with a fake device
-docs/                   the guide set; docs/README.md indexes it
+adapter.js              the ANX4 as SoundBase state: REPs in, SETs out
+driver/protocol.js      the wire: framing, encoding, decoding, offsets
+driver/anx4-client.js   the TCP connection, its watchdog, the discovery probe
+driver/fake-anx4.js     a fake receiver; every test runs against it
+__tests__/              the codec alone, and the plugin through the real shell
+examples/network-analyzer/   the template's worked spectrum-analyzer plugin, for reference
+docs/                   the template's guide set; docs/README.md indexes it
 scripts/                doctor, smoke, manifest, rename, bump-version, release, pack-release
 ```
+
+State goes out under a core key only where
+`channel-monitoring.openapi.yaml` documents the value shape; everything else
+is under the four `x.shure-anx4.*` extension keys the manifest declares. Keep
+it that way unless the shape of a core key is known.
 
 ## Invariants — do not violate these without being asked
 
